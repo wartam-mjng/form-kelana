@@ -35,6 +35,7 @@ input::placeholder{font-family:inherit;font-size:15px;font-weight:400;color:#9ca
 select{font-family:inherit}
 input:focus,select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 4px rgba(15,118,110,.15)}
 select:disabled{background:#f3f4f6;color:#9ca3af}
+.btn-wa{display:block;background:#25D366;color:#fff!important;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:800;text-align:center;text-decoration:none;margin-top:18px;box-shadow:0 4px 14px rgba(37,211,102,.35)}
 button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:14px;padding:15px 20px;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:24px;width:100%;box-shadow:0 6px 18px rgba(234,88,12,.35)}
 button:disabled{opacity:.5;box-shadow:none}
 .pesan{margin-top:14px;font-size:14px;padding:12px;border-radius:10px;display:none}
@@ -67,6 +68,8 @@ button:disabled{opacity:.5;box-shadow:none}
 <label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
 
 <button id="kirim" onclick="kirim()">📨 Kirim Permintaan</button>
+<p class="kecil" style="text-align:center;margin-top:18px">Atau, pesan langsung lewat WhatsApp:</p>
+<a class="btn-wa" href="https://wa.me/628156095823?text=Assalaamu%27alaikum%0AHalo%20Pak%20Wartam%2C%20kami%20dari....%20berminat%20untuk%20memesan%20aplikasi%20Kelana." target="_blank" rel="noopener">💬 Pesan via WhatsApp</a>
 <div id="pesan" class="pesan"></div>
 
 <p class="kaki">Dikembangkan oleh Wartam, S.Pd., SMP Negeri 4 Majenang</p>
