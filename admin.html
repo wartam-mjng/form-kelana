@@ -78,7 +78,7 @@ function masuk(){
 }
 function tampilDaftar(r){
   document.getElementById('infoWilayah').textContent = 'Data wilayah: ' + r.jumlahWilayah + ' kecamatan di tab Wilayah.' + (r.jumlahWilayah < 1000 ? ' (Jalankan menu KELANA > Setup Data Wilayah di Sheet bila masih 0.)' : '');
-  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Perangkat</th><th>Nominal</th><th>Bukti Transfer</th><th>Status / Seri</th><th>Aksi</th></tr>';
+  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Perangkat</th><th>Donasi</th><th>Bukti Transfer</th><th>Status / Seri</th><th>Aksi</th></tr>';
   r.data.forEach(function(x){
     html += '<tr><td>' + esc(x.waktu) + '</td><td><b>' + esc(x.sekolah) + '</b></td>' +
       '<td>' + esc(x.provinsi) + ' / ' + esc(x.kabupaten) + ' / ' + esc(x.kecamatan) + '</td>' +
