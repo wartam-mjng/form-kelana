@@ -50,7 +50,7 @@ button:disabled{opacity:.5;box-shadow:none}
 </style>
 </head>
 <body>
-<div class="kartu"><div class="kepala"><h1>📋 Form Pemesanan Aplikasi Kelana</h1><div class="kepala-baris"><span class="lencana">✓ Satu sekolah satu lisensi &nbsp;•&nbsp; Donasi seikhlasnya</span><a class="btn-wa-kepala" href="https://wa.me/628156095823?text=Assalaamu%27alaikum%0AHalo%20Pak%20Wartam%2C%20kami%20dari....%20berminat%20untuk%20memesan%20aplikasi%20Kelana." target="_blank" rel="noopener">💬 Pesan via WhatsApp</a></div></div><div class="isi">
+<div class="kartu"><div class="kepala"><h1>📋 Form Pemesanan Aplikasi Kelana</h1><div class="kepala-baris"><span class="lencana">✓ Satu sekolah satu lisensi &nbsp;•&nbsp; Donasi seikhlasnya</span><a class="btn-wa-kepala" href="https://wa.me/628156095823?text=Assalaamu%27alaikum%0AHalo%20Pak%20Wartam%2C%20kami%20dari....%20berminat%20untuk%20memesan%20aplikasi%20Kelana." target="_blank" rel="noopener">💳 Info Rekening</a></div></div><div class="isi">
 <h2>🏫 Data Sekolah</h2>
 <label>🏫 Nama Sekolah *</label>
 <input id="sekolah" placeholder="Contoh: SMP Negeri 4 Majenang">
@@ -64,7 +64,6 @@ button:disabled{opacity:.5;box-shadow:none}
 <label>✉️ Email *</label><input id="email" type="email" placeholder="Contoh: sekolah@example.com">
 <label>📱 Kontak WA *</label><input id="wa" placeholder="Contoh: 081234567890">
 <label>💻 Jumlah Perangkat (Laptop/PID) yang Menjalankan KELANA *</label><input id="jumlah" type="number" min="1" placeholder="Contoh: 3">
-<div class="harga">🤲 <b>Donasi seikhlasnya:</b> lisensi ini didukung donasi seikhlasnya dari sekolah pengguna. Tuliskan nominal donasi yang ditransfer di bawah, lalu lampirkan tautan bukti transfernya.</div>
 <label>💰 Nominal Donasi (Rp) *</label><input id="nominal" type="number" min="0" placeholder="Contoh: 100000">
 <label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
 
@@ -124,11 +123,20 @@ function pakaiBundle(prov) {
   isiSelect('kabupaten', petaWilayah[prov].kabupaten, '— Pilih Kabupaten / Kota —', true);
 }
 
-jsonp({ action: 'provinsi' }, function (daftar) {
-  isiSelect('provinsi', daftar, '— Pilih Provinsi —', false);
-}, function () {
-  tampilPesan('Gagal memuat daftar provinsi. Coba muat ulang halaman.', false);
-});
+function muatProvinsi(percobaan) {
+  jsonp({ action: 'provinsi' }, function (daftar) {
+    if (!daftar || !daftar.length) {
+      if (percobaan < 3) { setTimeout(function () { muatProvinsi(percobaan + 1); }, 2000); }
+      else { tampilPesan('Gagal memuat daftar provinsi. Periksa koneksi, lalu muat ulang halaman.', false); }
+      return;
+    }
+    isiSelect('provinsi', daftar, '— Pilih Provinsi —', false);
+  }, function () {
+    if (percobaan < 3) { setTimeout(function () { muatProvinsi(percobaan + 1); }, 2000); }
+    else { tampilPesan('Gagal memuat daftar provinsi. Periksa koneksi, lalu muat ulang halaman.', false); }
+  });
+}
+muatProvinsi(1);
 
 document.getElementById('provinsi').addEventListener('change', function () {
   var prov = this.value;
