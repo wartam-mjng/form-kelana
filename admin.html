@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Lisensi KELANA</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fffbeb;margin:0;padding:16px;color:#1f2937}
+.kartu{max-width:900px;margin:0 auto 14px;background:#fff;border:1px solid #fde68a;border-radius:14px;padding:18px}
+h1{color:#0f766e;font-size:20px;margin:0 0 8px}
+input{padding:10px;border:1px solid #d1d5db;border-radius:10px;font-size:14px}
+button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}
+button.merah{background:#dc2626} button.hijau{background:#15803d} button:disabled{opacity:.5}
+table{width:100%;border-collapse:collapse;font-size:13px} th{background:#0f766e;color:#fff;padding:8px;text-align:left}
+td{border-bottom:1px solid #fde68a;padding:7px;vertical-align:top}
+pre{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;white-space:pre-wrap;font-size:13px}
+.pesan{margin-top:10px;font-size:13px;padding:10px;border-radius:10px;display:none}
+.ok{background:#dcfce7} .galat{background:#fee2e2}
+.kecil{font-size:13px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="kartu" id="loginBox">
+  <h1>🔐 Admin Lisensi KELANA</h1>
+  <p class="kecil">Masukkan PIN admin (hanya Wartam yang tahu). PIN hanya disimpan di memori halaman ini selama halaman terbuka, tidak disimpan di browser. Jangan bagikan tautan halaman ini beserta PIN kepada siapa pun.</p>
+  <input id="pin" type="password" placeholder="PIN admin" style="max-width:220px">
+  <button id="btnMasuk" type="button">Masuk</button>
+  <div id="pesanLogin" class="pesan"></div>
+</div>
+<div class="kartu" id="panel" style="display:none">
+  <h1>📋 Daftar Permintaan Lisensi</h1>
+  <div id="infoWilayah" class="kecil" style="margin-bottom:10px"></div>
+  <button id="btnMuat" type="button">🔄 Muat Ulang Daftar</button>
+  <div id="daftar" style="overflow-x:auto;margin-top:12px"></div>
+  <div id="lisensiBox" style="display:none;margin-top:16px">
+    <h3>📄 Teks lisensi.txt (salin untuk paket)</h3>
+    <pre id="lisensiTeks"></pre>
+    <button id="btnSalin" type="button">📋 Salin Teks</button>
+    <p class="kecil">Simpan teks ini sebagai berkas <b>lisensi.txt</b> di samping kelana.py (atau kelana.exe), lalu zip bersama aplikasi + panduan dan kirim ke sekolah.</p>
+  </div>
+  <div id="pesan" class="pesan"></div>
+</div>
+<script>
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwxCfjL9KYTSpYMoB0DyeOIdinGdQDwl_SfD3Lx_yCsSw8m7c13hmIUlWNgyutUKUAQ/exec';
+var PIN = '';
+function esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function tampilPesan(id, teks, ok){
+  var p = document.getElementById(id);
+  p.textContent = teks; p.className = 'pesan ' + (ok ? 'ok' : 'galat'); p.style.display = 'block';
+}
+function jsonp(params, cb){
+  var unik = 'cb' + Date.now() + Math.floor(Math.random() * 100000);
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var timeout = setTimeout(function(){
+    delete window[unik];
+    cb({ ok: false, pesan: 'Server tidak merespons dalam 30 detik. Coba lagi.' });
+  }, 30000);
+  window[unik] = function(r){ clearTimeout(timeout); delete window[unik]; cb(r); };
+  var s = document.createElement('script');
+  s.src = WEBAPP_URL + '?callback=' + unik + '&' + qs;
+  s.onerror = function(){ clearTimeout(timeout); delete window[unik]; cb({ ok: false, pesan: 'Gagal menghubungi server. Periksa koneksi, lalu coba lagi.' }); };
+  document.body.appendChild(s);
+}
+function masuk(){
+  PIN = document.getElementById('pin').value;
+  if (!PIN) { tampilPesan('pesanLogin', 'Masukkan PIN admin dulu.', false); return; }
+  jsonp({ action: 'listAdmin', pin: PIN }, function(r){
+    if (r.ok) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      tampilDaftar(r);
+    } else {
+      tampilPesan('pesanLogin', r.pesan || 'PIN tidak valid.', false);
+    }
+  });
+}
+function tampilDaftar(r){
+  document.getElementById('infoWilayah').textContent = 'Data wilayah: ' + r.jumlahWilayah + ' kecamatan di tab Wilayah.' + (r.jumlahWilayah < 1000 ? ' (Jalankan menu KELANA > Setup Data Wilayah di Sheet bila masih 0.)' : '');
+  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Status / Seri</th><th>Aksi</th></tr>';
+  r.data.forEach(function(x){
+    html += '<tr><td>' + esc(x.waktu) + '</td><td><b>' + esc(x.sekolah) + '</b></td>' +
+      '<td>' + esc(x.provinsi) + ' / ' + esc(x.kabupaten) + ' / ' + esc(x.kecamatan) + '</td>' +
+      '<td>' + esc(x.email) + '<br>' + esc(x.wa) + '</td>' +
+      '<td>' + esc(x.status) + (x.seri ? '<br>' + esc(x.seri) : '') + '</td><td>';
+    if (x.status === 'Menunggu') {
+      html += '<button class="hijau" data-baris="' + x.baris + '" data-aksi="Disetujui">Setujui</button> ' +
+        '<button class="merah" data-baris="' + x.baris + '" data-aksi="Ditolak">Tolak</button>';
+    } else if (x.status === 'Disetujui') {
+      html += '<button data-baris="' + x.baris + '" data-aksi="lisensi">Lihat Lisensi</button>';
+    } else { html += '—'; }
+    html += '</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('daftar').innerHTML = html;
+  document.querySelectorAll('#daftar [data-aksi]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var a = b.getAttribute('data-aksi');
+      var bar = parseInt(b.getAttribute('data-baris'), 10);
+      if (a === 'lisensi') lihatLisensi(bar); else aksi(bar, a);
+    });
+  });
+}
+function muat(){
+  document.getElementById('daftar').innerHTML = '<p class="kecil">Memuat daftar…</p>';
+  jsonp({ action: 'listAdmin', pin: PIN }, function(r){
+    if (!r.ok) { tampilPesan('pesan', r.pesan, false); document.getElementById('daftar').innerHTML = ''; return; }
+    tampilDaftar(r);
+  });
+}
+function aksi(baris, status){
+  if (!confirm(status + ' permintaan ini?')) return;
+  jsonp({ action: 'setStatus', pin: PIN, baris: baris, status: status }, function(r){
+    tampilPesan('pesan', r.pesan, r.ok); if (r.ok) muat();
+  });
+}
+function lihatLisensi(baris){
+  jsonp({ action: 'lisensi', pin: PIN, baris: baris }, function(r){
+    if (!r.ok) { tampilPesan('pesan', r.pesan, false); return; }
+    document.getElementById('lisensiTeks').textContent = r.teks;
+    document.getElementById('lisensiBox').style.display = 'block';
+  });
+}
+document.getElementById('btnMasuk').addEventListener('click', masuk);
+document.getElementById('pin').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') masuk(); });
+document.getElementById('btnMuat').addEventListener('click', muat);
+document.getElementById('btnSalin').addEventListener('click', function(){
+  var t = document.getElementById('lisensiTeks').textContent;
+  if (navigator.clipboard) { navigator.clipboard.writeText(t).then(function(){ tampilPesan('pesan', 'Teks lisensi disalin.', true); }); }
+  else { tampilPesan('pesan', 'Salin manual dari kotak teks di atas.', false); }
+});
+</script>
+</body>
+</html>

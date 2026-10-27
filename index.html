@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Kelana</title>
+<!--
+  FORM PERMINTAAN LISENSI KELANA (berkas HTML terpisah)
+  =====================================================
+  Berkas ini adalah formulir publiknya. Ia berbicara ke backend
+  Google Apps Script (Code.gs) lewat JSONP, jadi berkas ini bisa
+  dibuka langsung dari laptop (klik ganda) atau di-host statis
+  (mis. GitHub Pages) — tidak perlu server sendiri.
+
+  WEBAPP_URL di bawah sudah diisi dengan URL Web app Bapak.
+  URL ini TETAP SAMA selama pembaruan Code.gs di-deploy sebagai
+  versi baru dari deployment yang sama (Deploy > Manage
+  deployments > edit > New version). Bila Bapak membuat deployment
+  baru (bukan versi baru), URL berubah dan harus diperbarui di sini.
+-->
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#ecfdf5 0%,#f0fdfa 40%,#fffbeb 100%);margin:0;padding:20px 14px;color:#1f2937;min-height:100vh;box-sizing:border-box}
+.kartu{max-width:560px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(15,118,110,.18)}
+.kepala{background:linear-gradient(135deg,#0f766e,#15803d);padding:22px 22px 18px;color:#fff}
+.kepala h1{margin:0;font-size:24px;letter-spacing:.2px}
+.isi{padding:20px 22px 16px}
+label{display:block;font-size:13px;font-weight:700;color:#0f766e;margin:16px 0 6px}
+input,select{width:100%;padding:12px 14px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;box-sizing:border-box;background:#fff;color:#1f2937;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.15)}
+select:disabled{background:#f3f4f6;color:#9ca3af}
+button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:700;cursor:pointer;margin-top:22px;width:100%;box-shadow:0 4px 14px rgba(234,88,12,.35)}
+button:disabled{opacity:.5;box-shadow:none}
+.pesan{margin-top:14px;font-size:14px;padding:12px;border-radius:10px;display:none}
+.ok{background:#dcfce7;border:1px solid #86efac} .galat{background:#fee2e2;border:1px solid #fca5a5}
+.kecil{font-size:12px;color:#9ca3af;text-align:center;margin:16px 0 0}
+.kaki{font-size:12px;color:#6b7280;text-align:center;margin:6px 0 0}
+</style>
+</head>
+<body>
+<div class="kartu"><div class="kepala"><h1>📋 Form Kelana</h1></div><div class="isi">
+<label>🏫 Nama Sekolah *</label>
+<input id="sekolah" placeholder="Contoh: SMP Negeri 1 Majenang">
+<label>🗺️ Provinsi *</label><select id="provinsi"><option value="">— Memuat… —</option></select>
+<label>🏙️ Kabupaten / Kota *</label><select id="kabupaten" disabled><option value="">— Pilih provinsi dulu —</option></select>
+<input id="kabupatenLain" placeholder="Tulis kabupaten/kota (bila pilih Lainnya)" style="display:none;margin-top:8px">
+<label>📍 Kecamatan *</label><select id="kecamatan" disabled><option value="">— Pilih kabupaten dulu —</option></select>
+<input id="kecamatanLain" placeholder="Tulis kecamatan (bila pilih Lainnya)" style="display:none;margin-top:8px">
+<label>✉️ Email *</label><input id="email" type="email" placeholder="Contoh: sekolah@example.com">
+<label>📱 Kontak WA *</label><input id="wa" placeholder="Contoh: 081234567890">
+<button id="kirim" onclick="kirim()">📨 Kirim Permintaan</button>
+<div id="pesan" class="pesan"></div>
+<p class="kecil">Data ini hanya dipakai untuk pencatatan lisensi KELANA.</p>
+<p class="kaki">Dikembangkan oleh Wartam, S.Pd., SMP Negeri 4 Majenang</p>
+</div></div>
+<script>
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwxCfjL9KYTSpYMoB0DyeOIdinGdQDwl_SfD3Lx_yCsSw8m7c13hmIUlWNgyutUKUAQ/exec';
+var LAIN = '__lainnya__';
+var petaWilayah = {};
+
+function tampilPesan(teks, ok) {
+  var p = document.getElementById('pesan'); p.textContent = teks;
+  p.className = 'pesan ' + (ok ? 'ok' : 'galat'); p.style.display = 'block';
+}
+
+// Panggil backend Apps Script lewat JSONP (tag <script>), supaya bisa
+// jalan dari berkas statis tanpa masalah CORS.
+function jsonp(params, sukses, gagal) {
+  if (WEBAPP_URL.indexOf('XXXX') !== -1) {
+    tampilPesan('Form ini belum dihubungkan ke server: isi WEBAPP_URL di index.html dengan URL Web app dari Apps Script.', false);
+    return;
+  }
+  var unik = 'cb' + Date.now() + Math.floor(Math.random() * 10000);
+  var s = document.createElement('script');
+  var timer = setTimeout(function () {
+    if (window[unik]) {
+      delete window[unik]; s.remove();
+      (gagal || tampilPesan)('Server tidak merespons. Coba lagi beberapa saat.', false);
+    }
+  }, 30000);
+  window[unik] = function (data) {
+    try { sukses(data); } finally { clearTimeout(timer); delete window[unik]; s.remove(); }
+  };
+  s.onerror = function () {
+    clearTimeout(timer); delete window[unik];
+    (gagal || tampilPesan)('Gagal menghubungi server. Periksa koneksi lalu coba lagi.', false);
+  };
+  var qs = Object.keys(params).map(function (k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  s.src = WEBAPP_URL + '?callback=' + unik + '&' + qs;
+  document.body.appendChild(s);
+}
+
+function isiSelect(id, daftar, teksAwal, pakaiLainnya) {
+  var s = document.getElementById(id); s.innerHTML = '';
+  var o0 = document.createElement('option'); o0.value = ''; o0.textContent = teksAwal; s.appendChild(o0);
+  daftar.forEach(function (x) { var o = document.createElement('option'); o.value = x; o.textContent = x; s.appendChild(o); });
+  if (pakaiLainnya) { var oL = document.createElement('option'); oL.value = LAIN; oL.textContent = 'Lainnya (ketik manual)'; s.appendChild(oL); }
+  s.disabled = false;
+}
+
+function pakaiBundle(prov) {
+  isiSelect('kabupaten', petaWilayah[prov].kabupaten, '— Pilih Kabupaten / Kota —', true);
+}
+
+jsonp({ action: 'provinsi' }, function (daftar) {
+  isiSelect('provinsi', daftar, '— Pilih Provinsi —', false);
+}, function () {
+  tampilPesan('Gagal memuat daftar provinsi. Coba muat ulang halaman.', false);
+});
+
+document.getElementById('provinsi').addEventListener('change', function () {
+  var prov = this.value;
+  document.getElementById('kabupatenLain').style.display = 'none';
+  document.getElementById('kecamatanLain').style.display = 'none';
+  var kec = document.getElementById('kecamatan'); kec.innerHTML = ''; kec.disabled = true;
+  var kab = document.getElementById('kabupaten'); kab.innerHTML = ''; kab.disabled = true;
+  if (!prov) { return; }
+  if (petaWilayah[prov]) { pakaiBundle(prov); return; }
+  jsonp({ action: 'wilayah', prov: prov }, function (b) {
+    if (!b || !b.kabupaten) {
+      tampilPesan('Server belum diperbarui: redeploy Code.gs sebagai New version (lihat PANDUAN), lalu coba lagi.', false);
+      return;
+    }
+    petaWilayah[prov] = b;
+    pakaiBundle(prov);
+  });
+});
+
+document.getElementById('kabupaten').addEventListener('change', function () {
+  var prov = document.getElementById('provinsi').value;
+  var kab = this.value;
+  document.getElementById('kabupatenLain').style.display = (kab === LAIN) ? 'block' : 'none';
+  var kec = document.getElementById('kecamatan'); kec.innerHTML = '';
+  if (kab === LAIN) { kec.disabled = true; document.getElementById('kecamatanLain').style.display = 'block'; return; }
+  document.getElementById('kecamatanLain').style.display = 'none';
+  if (!kab) { kec.disabled = true; return; }
+  var daftar = (petaWilayah[prov] && petaWilayah[prov].kecamatan[kab]) || [];
+  isiSelect('kecamatan', daftar, '— Pilih Kecamatan —', true);
+});
+
+document.getElementById('kecamatan').addEventListener('change', function () {
+  document.getElementById('kecamatanLain').style.display = (this.value === LAIN) ? 'block' : 'none';
+});
+
+function nilai(id) { return document.getElementById(id).value.trim(); }
+
+function kirim() {
+  var kabSel = nilai('kabupaten');
+  var kab = (kabSel === LAIN) ? nilai('kabupatenLain') : kabSel;
+  var kecSel = nilai('kecamatan');
+  var kec = (kabSel === LAIN || kecSel === LAIN) ? nilai('kecamatanLain') : kecSel;
+  var data = { sekolah: nilai('sekolah'), prov: nilai('provinsi'),
+    kab: kab, kec: kec, email: nilai('email'), wa: nilai('wa') };
+  if (!data.sekolah || !data.prov || !data.kab || !data.kec || !data.email || !data.wa) {
+    tampilPesan('Mohon lengkapi semua field yang bertanda *.', false); return; }
+  if (!/^\S+@\S+\.\S+$/.test(data.email)) { tampilPesan('Format email belum benar.', false); return; }
+  var tombol = document.getElementById('kirim'); tombol.disabled = true; tombol.textContent = 'Mengirim…';
+  var params = { action: 'kirim', sekolah: data.sekolah, prov: data.prov,
+    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa };
+  jsonp(params, function (r) {
+    tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
+    tampilPesan(r.pesan, r.ok);
+  }, function () {
+    tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
+    tampilPesan('Gagal mengirim. Coba lagi beberapa saat.', false);
+  });
+}
+</script>
+</body>
+</html>
