@@ -78,11 +78,14 @@ function masuk(){
 }
 function tampilDaftar(r){
   document.getElementById('infoWilayah').textContent = 'Data wilayah: ' + r.jumlahWilayah + ' kecamatan di tab Wilayah.' + (r.jumlahWilayah < 1000 ? ' (Jalankan menu KELANA > Setup Data Wilayah di Sheet bila masih 0.)' : '');
-  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Status / Seri</th><th>Aksi</th></tr>';
+  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Perangkat</th><th>Nominal</th><th>Bukti Transfer</th><th>Status / Seri</th><th>Aksi</th></tr>';
   r.data.forEach(function(x){
     html += '<tr><td>' + esc(x.waktu) + '</td><td><b>' + esc(x.sekolah) + '</b></td>' +
       '<td>' + esc(x.provinsi) + ' / ' + esc(x.kabupaten) + ' / ' + esc(x.kecamatan) + '</td>' +
       '<td>' + esc(x.email) + '<br>' + esc(x.wa) + '</td>' +
+      '<td>' + esc(x.jumlah) + '</td>' +
+      '<td>' + (x.nominal ? 'Rp' + Number(x.nominal).toLocaleString('id-ID') : '') + '</td>' +
+      '<td>' + (x.bukti ? '<a href="' + esc(x.bukti) + '" target="_blank" rel="noopener">Lihat bukti</a>' : '') + '</td>' +
       '<td>' + esc(x.status) + (x.seri ? '<br>' + esc(x.seri) : '') + '</td><td>';
     if (x.status === 'Menunggu') {
       html += '<button class="hijau" data-baris="' + x.baris + '" data-aksi="Disetujui">Setujui</button> ' +

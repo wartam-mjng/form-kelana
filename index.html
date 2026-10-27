@@ -47,6 +47,10 @@ button:disabled{opacity:.5;box-shadow:none}
 <input id="kecamatanLain" placeholder="Tulis kecamatan (bila pilih Lainnya)" style="display:none;margin-top:8px">
 <label>✉️ Email *</label><input id="email" type="email" placeholder="Contoh: sekolah@example.com">
 <label>📱 Kontak WA *</label><input id="wa" placeholder="Contoh: 081234567890">
+<label>💻 Jumlah Perangkat (Laptop/PID) yang Menjalankan KELANA *</label><input id="jumlah" type="number" min="1" placeholder="Contoh: 3">
+<div id="infoBiaya" class="kecil" style="text-align:left;margin:8px 0 0;color:#0f766e;font-weight:700">Biaya lisensi: Rp50.000 per perangkat, sekali bayar, maksimal Rp500.000 per sekolah. Satu sekolah satu lisensi.</div>
+<label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
+<p class="kecil" style="text-align:left">Unggah dulu foto bukti transfer ke penyimpanan sekolah (mis. Google Drive), atur agar bisa dilihat lewat tautan, lalu tempel tautannya di sini. Persetujuan hanya diberikan setelah transfer diverifikasi.</p>
 <button id="kirim" onclick="kirim()">📨 Kirim Permintaan</button>
 <div id="pesan" class="pesan"></div>
 <p class="kecil">Data ini hanya dipakai untuk pencatatan lisensi KELANA.</p>
@@ -139,6 +143,14 @@ document.getElementById('kabupaten').addEventListener('change', function () {
   isiSelect('kecamatan', daftar, '— Pilih Kecamatan —', true);
 });
 
+document.getElementById('jumlah').addEventListener('input', function () {
+  var j = parseInt(this.value, 10) || 0;
+  var n = Math.min(j * 50000, 500000);
+  document.getElementById('infoBiaya').textContent = j > 0
+    ? 'Perkiraan biaya: Rp' + n.toLocaleString('id-ID') + ' (' + j + ' perangkat x Rp50.000, maksimal Rp500.000, sekali bayar).'
+    : 'Biaya lisensi: Rp50.000 per perangkat, sekali bayar, maksimal Rp500.000 per sekolah. Satu sekolah satu lisensi.';
+});
+
 document.getElementById('kecamatan').addEventListener('change', function () {
   document.getElementById('kecamatanLain').style.display = (this.value === LAIN) ? 'block' : 'none';
 });
@@ -151,13 +163,17 @@ function kirim() {
   var kecSel = nilai('kecamatan');
   var kec = (kabSel === LAIN || kecSel === LAIN) ? nilai('kecamatanLain') : kecSel;
   var data = { sekolah: nilai('sekolah'), prov: nilai('provinsi'),
-    kab: kab, kec: kec, email: nilai('email'), wa: nilai('wa') };
-  if (!data.sekolah || !data.prov || !data.kab || !data.kec || !data.email || !data.wa) {
+    kab: kab, kec: kec, email: nilai('email'), wa: nilai('wa'),
+    jumlah: nilai('jumlah'), bukti: nilai('bukti') };
+  if (!data.sekolah || !data.prov || !data.kab || !data.kec || !data.email || !data.wa || !data.jumlah || !data.bukti) {
     tampilPesan('Mohon lengkapi semua field yang bertanda *.', false); return; }
+  if (parseInt(data.jumlah, 10) < 1) { tampilPesan('Jumlah perangkat minimal 1.', false); return; }
+  if (data.bukti.indexOf('http') !== 0) { tampilPesan('Tautan bukti transfer belum benar (harus diawali http).', false); return; }
   if (!/^\S+@\S+\.\S+$/.test(data.email)) { tampilPesan('Format email belum benar.', false); return; }
   var tombol = document.getElementById('kirim'); tombol.disabled = true; tombol.textContent = 'Mengirim…';
   var params = { action: 'kirim', sekolah: data.sekolah, prov: data.prov,
-    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa };
+    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa,
+    jumlah: data.jumlah, bukti: data.bukti };
   jsonp(params, function (r) {
     tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
     tampilPesan(r.pesan, r.ok);
