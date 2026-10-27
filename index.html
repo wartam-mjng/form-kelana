@@ -36,7 +36,9 @@ select{font-family:inherit}
 input:focus,select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 4px rgba(15,118,110,.15)}
 select:disabled{background:#f3f4f6;color:#9ca3af}
 .kepala-baris{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px}
-.btn-wa-kepala{display:inline-block;background:#fff;color:#065f46!important;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.20)}
+.rekening{display:inline-block;background:#fff;color:#065f46;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.20)}
+.rekening b{letter-spacing:.3px}
+.btn-salin{background:#065f46;color:#fff;border:0;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;margin-left:6px;cursor:pointer}
 button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:14px;padding:15px 20px;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:24px;width:100%;box-shadow:0 6px 18px rgba(234,88,12,.35)}
 button:disabled{opacity:.5;box-shadow:none}
 .pesan{margin-top:14px;font-size:14px;padding:12px;border-radius:10px;display:none}
@@ -50,7 +52,7 @@ button:disabled{opacity:.5;box-shadow:none}
 </style>
 </head>
 <body>
-<div class="kartu"><div class="kepala"><h1>📋 Form Pemesanan Aplikasi Kelana</h1><div class="kepala-baris"><span class="lencana">✓ Satu sekolah satu lisensi &nbsp;•&nbsp; Donasi seikhlasnya</span><a class="btn-wa-kepala" href="https://wa.me/628156095823?text=Assalaamu%27alaikum%0AHalo%20Pak%20Wartam%2C%20kami%20dari....%20berminat%20untuk%20memesan%20aplikasi%20Kelana." target="_blank" rel="noopener">💳 Info Rekening</a></div></div><div class="isi">
+<div class="kartu"><div class="kepala"><h1>📋 Form Pemesanan Aplikasi Kelana</h1><div class="kepala-baris"><span class="lencana">✓ Satu sekolah satu lisensi &nbsp;•&nbsp; Donasi seikhlasnya</span><span class="rekening">💳 Donasi: Bank BRI an Wartam — <b id="norek">678801003729530</b> <button type="button" class="btn-salin" onclick="salinRekening(this)">Salin</button></span></div></div><div class="isi">
 <h2>🏫 Data Sekolah</h2>
 <label>🏫 Nama Sekolah *</label>
 <input id="sekolah" placeholder="Contoh: SMP Negeri 4 Majenang">
@@ -77,6 +79,12 @@ var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxjM1XMueiJ9NcVrHqacX2
 var LAIN = '__lainnya__';
 var petaWilayah = {};
 
+function salinRekening(btn) {
+  var norek = document.getElementById('norek').textContent.trim();
+  function ok() { var lama = btn.textContent; btn.textContent = '✓ Tersalin'; setTimeout(function () { btn.textContent = lama; }, 2000); }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(norek).then(ok, function () {}); }
+  else { var t = document.createElement('textarea'); t.value = norek; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(t); }
+}
 function tampilPesan(teks, ok) {
   var p = document.getElementById('pesan'); p.textContent = teks;
   p.className = 'pesan ' + (ok ? 'ok' : 'galat'); p.style.display = 'block';
