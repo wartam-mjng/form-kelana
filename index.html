@@ -54,6 +54,8 @@ button:disabled{opacity:.5;box-shadow:none}
 <h2>🏫 Data Sekolah</h2>
 <label>🏫 Nama Sekolah *</label>
 <input id="sekolah" placeholder="Contoh: SMP Negeri 4 Majenang">
+<label>🆔 NPSN *</label>
+<input id="npsn" inputmode="numeric" placeholder="Contoh: 20345678">
 <h2>🗺️ Wilayah Sekolah</h2>
 <label>🗺️ Provinsi *</label><select id="provinsi"><option value="">— Memuat… —</option></select>
 <label>🏙️ Kabupaten / Kota *</label><select id="kabupaten" disabled><option value="">— Pilih provinsi dulu —</option></select>
@@ -64,6 +66,7 @@ button:disabled{opacity:.5;box-shadow:none}
 <label>✉️ Email *</label><input id="email" type="email" placeholder="Contoh: sekolah@example.com">
 <label>📱 Kontak WA *</label><input id="wa" placeholder="Contoh: 081234567890">
 <label>💻 Jumlah Perangkat (Laptop/PID) yang Menjalankan KELANA *</label><input id="jumlah" type="number" min="1" placeholder="Contoh: 3">
+<label>🖥️ Sistem Operasi (OS) yang Digunakan *</label><select id="os"><option value="">— Pilih OS —</option><option>Windows</option><option>Linux</option><option>Windows dan Linux</option></select>
 <label>💰 Nominal Donasi (Rp) *</label><input id="nominal" type="number" min="0" placeholder="Contoh: 500000">
 <label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
 
@@ -170,22 +173,31 @@ function kirim() {
   var kab = (kabSel === LAIN) ? nilai('kabupatenLain') : kabSel;
   var kecSel = nilai('kecamatan');
   var kec = (kabSel === LAIN || kecSel === LAIN) ? nilai('kecamatanLain') : kecSel;
-  var data = { sekolah: nilai('sekolah'), prov: nilai('provinsi'),
-    kab: kab, kec: kec, email: nilai('email'), wa: nilai('wa'),
+  var waRaw = nilai('wa').replace(/[\s\-]/g, '');
+  if (waRaw.indexOf('+62') === 0) { waRaw = '0' + waRaw.slice(3); }
+  else if (waRaw.indexOf('62') === 0) { waRaw = '0' + waRaw.slice(2); }
+  var data = { sekolah: nilai('sekolah'), npsn: nilai('npsn'), prov: nilai('provinsi'),
+    kab: kab, kec: kec, email: nilai('email'), wa: waRaw, os: nilai('os'),
     jumlah: nilai('jumlah'), bukti: nilai('bukti'), nominal: nilai('nominal') };
-  if (!data.sekolah || !data.prov || !data.kab || !data.kec || !data.email || !data.wa || !data.jumlah || !data.nominal) {
+  if (!data.sekolah || !data.npsn || !data.prov || !data.kab || !data.kec || !data.email || !data.wa || !data.os || !data.jumlah || !data.nominal) {
     tampilPesan('Mohon lengkapi semua field yang bertanda *.', false); return; }
   if (parseInt(data.jumlah, 10) < 1) { tampilPesan('Jumlah perangkat minimal 1.', false); return; }
   if (parseInt(data.nominal, 10) < 0) { tampilPesan('Nominal donasi tidak boleh negatif.', false); return; }
   if (parseInt(data.nominal, 10) > 0 && data.bukti.indexOf('http') !== 0) { tampilPesan('Tautan bukti transfer belum benar (harus diawali http).', false); return; }
   if (!/^\S+@\S+\.\S+$/.test(data.email)) { tampilPesan('Format email belum benar.', false); return; }
+  if (!/^\d{8}$/.test(data.npsn)) { tampilPesan('NPSN harus 8 digit angka.', false); return; }
+  if (!/^08\d{8,11}$/.test(data.wa)) { tampilPesan('Nomor WA belum benar: isi nomor Indonesia diawali 08, total 10–13 digit.', false); return; }
   var tombol = document.getElementById('kirim'); tombol.disabled = true; tombol.textContent = 'Mengirim…';
-  var params = { action: 'kirim', sekolah: data.sekolah, prov: data.prov,
-    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa,
+  var params = { action: 'kirim', sekolah: data.sekolah, npsn: data.npsn, prov: data.prov,
+    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa, os: data.os,
     jumlah: data.jumlah, bukti: data.bukti, nominal: data.nominal };
   jsonp(params, function (r) {
     tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
-    tampilPesan(r.pesan, r.ok);
+    if (r.ok) {
+      var pp = document.getElementById('pesan');
+      pp.innerHTML = r.pesan + '<br><br>📢 Silakan bergabung ke grup WhatsApp KELANA: <a href="https://chat.whatsapp.com/G37btEWk5X64jQ8tANmYiy?s=cl&p=a&mlu=4&ilr=4&iam=2" target="_blank" rel="noopener">Gabung Grup WhatsApp</a>';
+      pp.className = 'pesan ok'; pp.style.display = 'block';
+    } else { tampilPesan(r.pesan, false); }
   }, function () {
     tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
     tampilPesan('Gagal mengirim. Coba lagi beberapa saat.', false);
