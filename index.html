@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Form Kelana</title>
+<title>Form Pemesanan Aplikasi Kelana</title>
 <!--
   FORM PERMINTAAN LISENSI KELANA (berkas HTML terpisah)
   =====================================================
@@ -19,36 +19,48 @@
   baru (bukan versi baru), URL berubah dan harus diperbarui di sini.
 -->
 <style>
-body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#ecfdf5 0%,#f0fdfa 40%,#fffbeb 100%);margin:0;padding:20px 14px;color:#1f2937;min-height:100vh;box-sizing:border-box}
-.kartu{max-width:560px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(15,118,110,.18)}
-.kepala{background:linear-gradient(135deg,#0f766e,#15803d);padding:22px 22px 18px;color:#fff}
-.kepala h1{margin:0;font-size:24px;letter-spacing:.2px}
-.isi{padding:20px 22px 16px}
-label{display:block;font-size:13px;font-weight:700;color:#0f766e;margin:16px 0 6px}
-input,select{width:100%;padding:12px 14px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;box-sizing:border-box;background:#fff;color:#1f2937;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.15)}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#eef7f2;margin:0;padding:18px 12px;color:#1f2937;min-height:100vh}
+.kartu{max-width:600px;margin:0 auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,118,110,.20);border:1px solid #d1fae5}
+.kepala{background:linear-gradient(135deg,#065f46,#0f766e 55%,#15803d);padding:28px 24px 22px;color:#fff;position:relative}
+.kepala:after{content:"";position:absolute;right:18px;top:16px;font-size:52px;opacity:.25}
+.kepala h1{margin:0;font-size:26px;line-height:1.25;letter-spacing:.2px}
+.kepala p{margin:10px 0 0;font-size:14px;line-height:1.5;opacity:.92}
+.lencana{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;margin-top:14px}
+.isi{padding:8px 24px 20px}
+h2{font-size:15px;color:#065f46;margin:26px 0 2px;padding-bottom:8px;border-bottom:2px solid #d1fae5}
+label{display:block;font-size:13px;font-weight:700;color:#065f46;margin:14px 0 6px}
+input,select{width:100%;padding:13px 14px;border:1.5px solid #d1d5db;border-radius:12px;font-size:15px;background:#fff;color:#1f2937;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 4px rgba(15,118,110,.15)}
 select:disabled{background:#f3f4f6;color:#9ca3af}
-button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:700;cursor:pointer;margin-top:22px;width:100%;box-shadow:0 4px 14px rgba(234,88,12,.35)}
+button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:14px;padding:15px 20px;font-size:16px;font-weight:800;cursor:pointer;margin-top:24px;width:100%;box-shadow:0 6px 18px rgba(234,88,12,.35)}
 button:disabled{opacity:.5;box-shadow:none}
 .pesan{margin-top:14px;font-size:14px;padding:12px;border-radius:10px;display:none}
 .ok{background:#dcfce7;border:1px solid #86efac} .galat{background:#fee2e2;border:1px solid #fca5a5}
-.kecil{font-size:12px;color:#9ca3af;text-align:center;margin:16px 0 0}
-.kaki{font-size:12px;color:#6b7280;text-align:center;margin:6px 0 0}
+.kecil{font-size:12px;color:#6b7280;margin:8px 0 0;line-height:1.5}
+.kaki{font-size:12px;color:#6b7280;text-align:center;margin:18px 0 0}
+.harga{background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:14px;padding:14px 16px;margin-top:14px}
+.harga b{color:#065f46}
+#infoBiaya{font-size:14px;color:#065f46;font-weight:700}
+@media(max-width:480px){.kepala h1{font-size:22px}.isi{padding:8px 18px 18px}}
 </style>
 </head>
 <body>
-<div class="kartu"><div class="kepala"><h1>📋 Form Kelana</h1></div><div class="isi">
+<div class="kartu"><div class="kepala"><h1>📋 Form Pemesanan<br>Aplikasi Kelana</h1><p>Kelas Luring-Daring Terhubung — pesan lisensi resmi untuk sekolah Bapak/Ibu, berlaku untuk salinan luring dan daring.</p><span class="lencana">✓ Satu sekolah satu lisensi &nbsp;•&nbsp; Sekali bayar</span></div><div class="isi">
+<h2>🏫 Data Sekolah</h2>
 <label>🏫 Nama Sekolah *</label>
 <input id="sekolah" placeholder="Contoh: SMP Negeri 1 Majenang">
+<h2>🗺️ Wilayah Sekolah</h2>
 <label>🗺️ Provinsi *</label><select id="provinsi"><option value="">— Memuat… —</option></select>
 <label>🏙️ Kabupaten / Kota *</label><select id="kabupaten" disabled><option value="">— Pilih provinsi dulu —</option></select>
 <input id="kabupatenLain" placeholder="Tulis kabupaten/kota (bila pilih Lainnya)" style="display:none;margin-top:8px">
 <label>📍 Kecamatan *</label><select id="kecamatan" disabled><option value="">— Pilih kabupaten dulu —</option></select>
 <input id="kecamatanLain" placeholder="Tulis kecamatan (bila pilih Lainnya)" style="display:none;margin-top:8px">
+<h2>📞 Kontak &amp; Pembayaran</h2>
 <label>✉️ Email *</label><input id="email" type="email" placeholder="Contoh: sekolah@example.com">
 <label>📱 Kontak WA *</label><input id="wa" placeholder="Contoh: 081234567890">
 <label>💻 Jumlah Perangkat (Laptop/PID) yang Menjalankan KELANA *</label><input id="jumlah" type="number" min="1" placeholder="Contoh: 3">
-<div id="infoBiaya" class="kecil" style="text-align:left;margin:8px 0 0;color:#0f766e;font-weight:700">Biaya lisensi: Rp50.000 per perangkat, sekali bayar, maksimal Rp500.000 per sekolah. Satu sekolah satu lisensi.</div>
+<div class="harga">💰 <b>Biaya lisensi:</b> Rp50.000 per perangkat, sekali bayar, maksimal Rp500.000 per sekolah.<div id="infoBiaya" style="margin-top:6px">Isi jumlah perangkat untuk melihat perkiraan biayanya.</div></div>
 <label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
 <p class="kecil" style="text-align:left">Unggah dulu foto bukti transfer ke penyimpanan sekolah (mis. Google Drive), atur agar bisa dilihat lewat tautan, lalu tempel tautannya di sini. Persetujuan hanya diberikan setelah transfer diverifikasi.</p>
 <button id="kirim" onclick="kirim()">📨 Kirim Permintaan</button>
@@ -148,7 +160,7 @@ document.getElementById('jumlah').addEventListener('input', function () {
   var n = Math.min(j * 50000, 500000);
   document.getElementById('infoBiaya').textContent = j > 0
     ? 'Perkiraan biaya: Rp' + n.toLocaleString('id-ID') + ' (' + j + ' perangkat x Rp50.000, maksimal Rp500.000, sekali bayar).'
-    : 'Biaya lisensi: Rp50.000 per perangkat, sekali bayar, maksimal Rp500.000 per sekolah. Satu sekolah satu lisensi.';
+    : 'Isi jumlah perangkat untuk melihat perkiraan biayanya.';
 });
 
 document.getElementById('kecamatan').addEventListener('change', function () {
