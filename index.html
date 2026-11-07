@@ -42,6 +42,10 @@ button:disabled{opacity:.5;box-shadow:none}
 .pesan{margin-top:14px;font-size:14px;padding:12px;border-radius:10px;display:none}
 .ok{background:#dcfce7;border:1px solid #86efac} .galat{background:#fee2e2;border:1px solid #fca5a5}
 .kecil{font-size:13px;font-weight:400;color:#475569;margin:8px 0 0;line-height:1.5}
+input[type=file]{padding:10px 12px;cursor:pointer}
+.pratinjau{margin-top:10px}
+.pratinjau img{max-width:100%;max-height:220px;border-radius:12px;border:1px solid #d1fae5;display:block}
+.pratinjau .nama{font-size:13px;color:#065f46;margin-top:6px;word-break:break-all}
 .kaki{font-size:13px;font-weight:400;color:#475569;text-align:center;margin:18px 0 0}
 .harga{background:#ecfdf5;border:1.5px solid #a7f3d0;border-radius:14px;padding:14px 16px;margin-top:14px;font-size:14px;font-weight:400;line-height:1.5;color:#1f2937}
 .harga b{color:#065f46}
@@ -68,7 +72,10 @@ button:disabled{opacity:.5;box-shadow:none}
 <label>💻 Jumlah Perangkat (Laptop/PID) yang Menjalankan KELANA *</label><input id="jumlah" type="number" min="1" placeholder="Contoh: 3">
 <label>🖥️ Sistem Operasi (OS) yang Digunakan *</label><select id="os"><option value="">— Pilih OS —</option><option>Windows</option><option>Linux</option><option>Windows dan Linux</option></select>
 <label>💰 Nominal Donasi (Rp) *</label><input id="nominal" type="number" min="0" placeholder="Contoh: 500000">
-<label>🧾 Tautan Bukti Transfer *</label><input id="bukti" placeholder="Contoh: https://drive.google.com/... (tautan foto bukti transfer yang diunggah sekolah sendiri)">
+<label>🧾 Bukti Transfer *</label>
+<input id="bukti" type="file" accept="image/*">
+<div id="pratinjauBukti" class="pratinjau" style="display:none"></div>
+<p class="kecil">Unggah foto/screenshot bukti transfer (JPG/PNG, maks 5 MB). Gambar dikirim langsung — tidak perlu tautan Drive.</p>
 
 <button id="kirim" onclick="kirim()">📨 Kirim Permintaan</button>
 <p class="kecil" style="text-align:center;margin-top:18px">Atau, pesan langsung lewat WhatsApp:</p>
@@ -168,6 +175,64 @@ document.getElementById('kecamatan').addEventListener('change', function () {
 
 function nilai(id) { return document.getElementById(id).value.trim(); }
 
+// ---- Bukti transfer: unggah gambar (menggantikan tautan) ----
+var buktiFile = null;
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+document.getElementById('bukti').addEventListener('change', function () {
+  var f = this.files && this.files[0];
+  var pv = document.getElementById('pratinjauBukti');
+  pv.style.display = 'none'; pv.innerHTML = '';
+  buktiFile = null;
+  if (!f) return;
+  if (f.type.indexOf('image/') !== 0) {
+    tampilPesan('Bukti transfer harus berupa gambar (JPG/PNG).', false);
+    this.value = '';
+    return;
+  }
+  if (f.size > 5 * 1024 * 1024) {
+    tampilPesan('Ukuran gambar maks 5 MB.', false);
+    this.value = '';
+    return;
+  }
+  buktiFile = f;
+  var rd = new FileReader();
+  rd.onload = function (ev) {
+    pv.innerHTML = '<img src="' + ev.target.result + '" alt="Pratinjau bukti transfer"><div class="nama">' + escHtml(f.name) + ' (' + Math.round(f.size / 1024) + ' KB)</div>';
+    pv.style.display = 'block';
+  };
+  rd.readAsDataURL(f);
+});
+
+// Perkecil gambar ke maks 1280px (JPEG 0.85) agar unggahan ringan.
+// Mengembalikan {data (base64 tanpa prefix), tipe, nama}.
+function bacaGambarSebagaiBase64(file) {
+  return new Promise(function (resolve, reject) {
+    var rd = new FileReader();
+    rd.onload = function (ev) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var MAX = 1280, w = img.width, h = img.height;
+          if (w > MAX || h > MAX) { var s = Math.min(MAX / w, MAX / h); w = Math.round(w * s); h = Math.round(h * s); }
+          var cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          var cx = cv.getContext('2d');
+          cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, w, h);
+          cx.drawImage(img, 0, 0, w, h);
+          var du = cv.toDataURL('image/jpeg', 0.85);
+          resolve({ data: du.split(',')[1], tipe: 'image/jpeg', nama: file.name.replace(/\.[^.]+$/, '') + '.jpg' });
+        } catch (e) { reject(e); }
+      };
+      img.onerror = function () { reject(new Error('Gambar tidak bisa dibaca.')); };
+      img.src = ev.target.result;
+    };
+    rd.onerror = function () { reject(new Error('Gagal membaca berkas.')); };
+    rd.readAsDataURL(file);
+  });
+}
+
 function kirim() {
   var kabSel = nilai('kabupaten');
   var kab = (kabSel === LAIN) ? nilai('kabupatenLain') : kabSel;
@@ -178,31 +243,54 @@ function kirim() {
   else if (waRaw.indexOf('62') === 0) { waRaw = '0' + waRaw.slice(2); }
   var data = { sekolah: nilai('sekolah'), npsn: nilai('npsn'), prov: nilai('provinsi'),
     kab: kab, kec: kec, email: nilai('email'), wa: waRaw, os: nilai('os'),
-    jumlah: nilai('jumlah'), bukti: nilai('bukti'), nominal: nilai('nominal') };
+    jumlah: nilai('jumlah'), nominal: nilai('nominal') };
   if (!data.sekolah || !data.npsn || !data.prov || !data.kab || !data.kec || !data.email || !data.wa || !data.os || !data.jumlah || !data.nominal) {
     tampilPesan('Mohon lengkapi semua field yang bertanda *.', false); return; }
   if (parseInt(data.jumlah, 10) < 1) { tampilPesan('Jumlah perangkat minimal 1.', false); return; }
   if (parseInt(data.nominal, 10) < 0) { tampilPesan('Nominal donasi tidak boleh negatif.', false); return; }
-  if (parseInt(data.nominal, 10) > 0 && data.bukti.indexOf('http') !== 0) { tampilPesan('Tautan bukti transfer belum benar (harus diawali http).', false); return; }
+  if (parseInt(data.nominal, 10) > 0 && !buktiFile) { tampilPesan('Mohon unggah foto bukti transfer.', false); return; }
   if (!/^\S+@\S+\.\S+$/.test(data.email)) { tampilPesan('Format email belum benar.', false); return; }
   if (!/^\d{8}$/.test(data.npsn)) { tampilPesan('NPSN harus 8 digit angka.', false); return; }
   if (!/^08\d{8,11}$/.test(data.wa)) { tampilPesan('Nomor WA belum benar: isi nomor Indonesia diawali 08, total 10–13 digit.', false); return; }
   var tombol = document.getElementById('kirim'); tombol.disabled = true; tombol.textContent = 'Mengirim…';
-  var params = { action: 'kirim', sekolah: data.sekolah, npsn: data.npsn, prov: data.prov,
-    kab: data.kab, kec: data.kec, email: data.email, wa: data.wa, os: data.os,
-    jumlah: data.jumlah, bukti: data.bukti, nominal: data.nominal };
-  jsonp(params, function (r) {
-    tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
-    if (r.ok) {
-      var pp = document.getElementById('pesan');
-      pp.innerHTML = r.pesan + '<br><br>📢 Silakan bergabung ke grup WhatsApp KELANA: <a href="https://chat.whatsapp.com/G37btEWk5X64jQ8tANmYiy?s=cl&p=a&mlu=4&ilr=4&iam=2" target="_blank" rel="noopener">Gabung Grup WhatsApp</a>';
-      pp.className = 'pesan ok'; pp.style.display = 'block';
-    } else { tampilPesan(r.pesan, false); }
-  }, function () {
-    tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
-    tampilPesan('Gagal mengirim. Coba lagi beberapa saat.', false);
-  });
+  var lanjut = function (gambar) {
+    var payload = { action: 'kirim', sekolah: data.sekolah, npsn: data.npsn, prov: data.prov,
+      kab: data.kab, kec: data.kec, email: data.email, wa: data.wa, os: data.os,
+      jumlah: data.jumlah, nominal: data.nominal, bukti: '' };
+    if (gambar) { payload.buktiData = gambar.data; payload.buktiTipe = gambar.tipe; payload.buktiNama = gambar.nama; }
+    fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
+      .then(function (res) { return res.json(); })
+      .then(function (r) {
+        tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
+        if (r.ok) {
+          var pp = document.getElementById('pesan');
+          pp.innerHTML = r.pesan + '<br><br>📢 Silakan bergabung ke grup WhatsApp KELANA: <a href="https://chat.whatsapp.com/G37btEWk5X64jQ8tANmYiy?s=cl&p=a&mlu=4&ilr=4&iam=2" target="_blank" rel="noopener">Gabung Grup WhatsApp</a>';
+          pp.className = 'pesan ok'; pp.style.display = 'block';
+        } else { tampilPesan(r.pesan, false); }
+      })
+      .catch(function () {
+        tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
+        tampilPesan('Gagal mengirim. Coba lagi beberapa saat.', false);
+      });
+  };
+  if (buktiFile) {
+    bacaGambarSebagaiBase64(buktiFile).then(lanjut).catch(function () {
+      var rd2 = new FileReader();
+      rd2.onload = function (ev) {
+        var du = String(ev.target.result);
+        lanjut({ data: du.split(',')[1], tipe: buktiFile.type || 'image/jpeg', nama: buktiFile.name });
+      };
+      rd2.onerror = function () {
+        tombol.disabled = false; tombol.textContent = '📨 Kirim Permintaan';
+        tampilPesan('Gagal membaca gambar bukti transfer.', false);
+      };
+      rd2.readAsDataURL(buktiFile);
+    });
+  } else {
+    lanjut(null);
+  }
 }
+
 </script>
 </body>
 </html>
