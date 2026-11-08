@@ -89,10 +89,11 @@ function tampilDaftar(r){
       '<td>' + esc(x.status) + (x.seri ? '<br>' + esc(x.seri) : '') + '</td><td>';
     if (x.status === 'Menunggu') {
       html += '<button class="hijau" data-baris="' + x.baris + '" data-aksi="Disetujui">Setujui</button> ' +
-        '<button class="merah" data-baris="' + x.baris + '" data-aksi="Ditolak">Tolak</button>';
+        '<button class="merah" data-baris="' + x.baris + '" data-aksi="Ditolak">Tolak</button> ';
     } else if (x.status === 'Disetujui') {
-      html += '<button data-baris="' + x.baris + '" data-aksi="lisensi">Lihat Lisensi</button>';
-    } else { html += '—'; }
+      html += '<button data-baris="' + x.baris + '" data-aksi="lisensi">Lihat Lisensi</button> ';
+    }
+    html += '<button class="merah" data-baris="' + x.baris + '" data-aksi="hapus">Hapus</button>';
     html += '</td></tr>';
   });
   html += '</table>';
@@ -101,7 +102,7 @@ function tampilDaftar(r){
     b.addEventListener('click', function(){
       var a = b.getAttribute('data-aksi');
       var bar = parseInt(b.getAttribute('data-baris'), 10);
-      if (a === 'lisensi') lihatLisensi(bar); else aksi(bar, a);
+      if (a === 'lisensi') lihatLisensi(bar); else if (a === 'hapus') hapus(bar); else aksi(bar, a);
     });
   });
 }
@@ -115,6 +116,12 @@ function muat(){
 function aksi(baris, status){
   if (!confirm(status + ' permintaan ini?')) return;
   jsonp({ action: 'setStatus', pin: PIN, baris: baris, status: status }, function(r){
+    tampilPesan('pesan', r.pesan, r.ok); if (r.ok) muat();
+  });
+}
+function hapus(baris){
+  if (!confirm('Hapus baris ini? Data dan berkas bukti yang dihapus tidak bisa dikembalikan.')) return;
+  jsonp({ action: 'hapus', pin: PIN, baris: baris }, function(r){
     tampilPesan('pesan', r.pesan, r.ok); if (r.ok) muat();
   });
 }
