@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cek Status &amp; Unduhan Paket KELANA</title>
+<!--
+  HALAMAN STATUS & UNDUHAN PAKET KELANA (berkas HTML terpisah)
+  ============================================================
+  Sekolah memasukkan NPSN (8 digit) untuk melihat status permintaan
+  lisensinya. Bila sudah disetujui, halaman menampilkan nomor seri
+  dan tombol unduh paket (folder Drive per sekolah).
+  Berkas ini berbicara ke backend Google Apps Script (Code.gs)
+  lewat JSONP, jadi bisa di-host statis (GitHub Pages).
+-->
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#fff8e1;margin:0;padding:18px 12px;color:#1f2937;min-height:100vh;font-size:15px}
+.kartu{max-width:600px;margin:0 auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(15,118,110,.20);border:1px solid #d1fae5}
+.kepala{background:linear-gradient(135deg,#065f46,#0f766e 55%,#15803d);padding:28px 24px 22px;color:#fff}
+.kepala h1{margin:0;font-size:clamp(18px,5.2vw,24px);line-height:1.25}
+.kepala p{margin:10px 0 0;font-size:14px;line-height:1.5;opacity:.92}
+.isi{padding:8px 24px 20px}
+label{display:block;font-size:14px;font-weight:700;color:#065f46;margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border:1.5px solid #d1d5db;border-radius:12px;font-family:inherit;font-size:15px;background:#fff;color:#1f2937}
+input::placeholder{font-size:15px;color:#9ca3af}
+input:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 4px rgba(15,118,110,.15)}
+button{background:linear-gradient(180deg,#f97316,#ea580c);color:#fff;border:0;border-radius:14px;padding:15px 20px;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:18px;width:100%;box-shadow:0 6px 18px rgba(234,88,12,.35)}
+button:disabled{opacity:.5;box-shadow:none}
+.hasil{margin-top:18px;font-size:14px;line-height:1.6;padding:16px 18px;border-radius:14px;display:none}
+.hasil.ok{background:#ecfdf5;border:1.5px solid #86efac}
+.hasil.info{background:#fffbeb;border:1.5px solid #fde68a}
+.hasil.galat{background:#fee2e2;border:1.5px solid #fca5a5}
+.hasil h2{font-size:16px;color:#065f46;margin:0 0 8px}
+.hasil p{margin:6px 0}
+.hasil .seri{font-weight:700;color:#065f46;word-break:break-all}
+.btn-unduh{display:block;background:linear-gradient(180deg,#f97316,#ea580c);color:#fff!important;border-radius:14px;padding:15px 20px;font-size:16px;font-weight:800;text-align:center;text-decoration:none;margin-top:14px;box-shadow:0 6px 18px rgba(234,88,12,.35)}
+.kecil{font-size:13px;color:#475569;margin:14px 0 0;line-height:1.5}
+.kaki{font-size:13px;color:#475569;text-align:center;margin:18px 0 0}
+@media(max-width:480px){.isi{padding:8px 18px 18px}}
+</style>
+</head>
+<body>
+<div class="kartu"><div class="kepala"><h1>📦 Cek Status &amp; Unduhan Paket KELANA</h1><p>Masukkan NPSN sekolah Anda untuk melihat status permintaan lisensi. Bila sudah disetujui, Anda dapat langsung mengunduh paket KELANA untuk sekolah Anda.</p></div><div class="isi">
+<label>🆔 NPSN Sekolah *</label>
+<input id="npsn" inputmode="numeric" maxlength="8" placeholder="Contoh: 20300585">
+<button id="cek" onclick="cek()">🔍 Cek Status</button>
+<div id="hasil" class="hasil"></div>
+<p class="kecil" style="text-align:center">Belum mendaftar? <a href="https://wartam-mjng.github.io/form-kelana/">Isi Formulir Pemesanan Aplikasi Kelana</a></p>
+<p class="kaki">Dikembangkan oleh Wartam, S.Pd., SMP Negeri 4 Majenang</p>
+</div></div>
+<script>
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzGiXsIg1F5ymoxG8yBHtUwD58HkBcP-JMZdHeutbB7IvNhrpOwgIKDX2x-MYfDywKc/exec';
+function esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function jsonp(params, cb){
+  var unik = 'cb' + Date.now() + Math.floor(Math.random() * 100000);
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+  var timeout = setTimeout(function(){
+    delete window[unik];
+    cb({ ok: false, pesan: 'Server tidak merespons dalam 30 detik. Coba lagi.' });
+  }, 30000);
+  window[unik] = function(r){ clearTimeout(timeout); delete window[unik]; cb(r); };
+  var s = document.createElement('script');
+  s.src = WEBAPP_URL + '?callback=' + unik + '&' + qs;
+  s.onerror = function(){ clearTimeout(timeout); delete window[unik]; cb({ ok: false, pesan: 'Gagal menghubungi server. Periksa koneksi, lalu coba lagi.' }); };
+  document.body.appendChild(s);
+}
+function tampilHasil(html, jenis){
+  var h = document.getElementById('hasil');
+  h.innerHTML = html;
+  h.className = 'hasil ' + jenis;
+  h.style.display = 'block';
+}
+function cek(){
+  var npsn = document.getElementById('npsn').value.trim();
+  if (!/^\d{8}$/.test(npsn)) {
+    tampilHasil('<h2>⚠️ NPSN belum benar</h2><p>NPSN harus 8 digit angka. Periksa kembali NPSN sekolah Anda.</p>', 'galat');
+    return;
+  }
+  var tombol = document.getElementById('cek');
+  tombol.disabled = true; tombol.textContent = 'Mengecek…';
+  jsonp({ action: 'status', npsn: npsn }, function(r){
+    tombol.disabled = false; tombol.textContent = '🔍 Cek Status';
+    if (!r.ok) {
+      tampilHasil('<h2>🔍 NPSN tidak ditemukan</h2><p>' + esc(r.pesan || 'NPSN tidak ditemukan. Periksa kembali NPSN Anda.') + '</p>', 'galat');
+      return;
+    }
+    if (r.status === 'Disetujui' && r.tautan) {
+      tampilHasil('<h2>✅ Permintaan Anda disetujui</h2>' +
+        '<p>Sekolah: <b>' + esc(r.sekolah) + '</b></p>' +
+        '<p>Nomor seri: <span class="seri">' + esc(r.seri) + '</span></p>' +
+        '<p>Paket KELANA untuk sekolah Anda sudah siap. Klik tombol di bawah untuk mengunduh folder paketnya.</p>' +
+        '<a class="btn-unduh" href="' + esc(r.tautan) + '" target="_blank" rel="noopener">📥 Unduh Paket KELANA</a>', 'ok');
+    } else if (r.status === 'Disetujui') {
+      tampilHasil('<h2>✅ Permintaan Anda disetujui</h2>' +
+        '<p>Sekolah: <b>' + esc(r.sekolah) + '</b></p>' +
+        '<p>Nomor seri: <span class="seri">' + esc(r.seri) + '</span></p>' +
+        '<p>Paket Anda sedang disiapkan. Coba lagi nanti atau hubungi Wartam.</p>', 'info');
+    } else if (r.status === 'Menunggu') {
+      tampilHasil('<h2>⏳ Masih menunggu persetujuan</h2>' +
+        '<p>Sekolah: <b>' + esc(r.sekolah) + '</b></p>' +
+        '<p>Permintaan Anda masih menunggu persetujuan. Silakan cek lagi nanti.</p>', 'info');
+    } else if (r.status === 'Ditolak') {
+      tampilHasil('<h2>❌ Permintaan ditolak</h2>' +
+        '<p>Sekolah: <b>' + esc(r.sekolah) + '</b></p>' +
+        '<p>Permintaan Anda ditolak. Hubungi Wartam untuk informasi lebih lanjut.</p>', 'galat');
+    } else {
+      tampilHasil('<h2>Status: ' + esc(r.status) + '</h2><p>Sekolah: <b>' + esc(r.sekolah) + '</b></p>', 'info');
+    }
+  });
+}
+document.getElementById('npsn').addEventListener('keydown', function(ev){ if (ev.key === 'Enter') cek(); });
+</script>
+</body>
+</html>

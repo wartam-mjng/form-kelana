@@ -78,7 +78,7 @@ function masuk(){
 }
 function tampilDaftar(r){
   document.getElementById('infoWilayah').textContent = 'Data wilayah: ' + r.jumlahWilayah + ' kecamatan di tab Wilayah.' + (r.jumlahWilayah < 1000 ? ' (Jalankan menu KELANA > Setup Data Wilayah di Sheet bila masih 0.)' : '');
-  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Perangkat</th><th>Donasi</th><th>Bukti Transfer</th><th>Status / Seri</th><th>Aksi</th></tr>';
+  var html = '<table><tr><th>Waktu</th><th>Sekolah</th><th>Wilayah</th><th>Email / WA</th><th>Perangkat</th><th>Donasi</th><th>Bukti Transfer</th><th>Status / Seri</th><th>Unduhan</th><th>Aksi</th></tr>';
   r.data.forEach(function(x){
     html += '<tr><td>' + esc(x.waktu) + '</td><td><b>' + esc(x.sekolah) + '</b>' + (x.npsn ? '<br>NPSN: ' + esc(x.npsn) : '') + (x.os ? '<br>OS: ' + esc(x.os) : '') + '</td>' +
       '<td>' + esc(x.provinsi) + ' / ' + esc(x.kabupaten) + ' / ' + esc(x.kecamatan) + '</td>' +
@@ -86,12 +86,16 @@ function tampilDaftar(r){
       '<td>' + esc(x.jumlah) + '</td>' +
       '<td>' + (x.nominal ? 'Rp' + Number(x.nominal).toLocaleString('id-ID') : '') + '</td>' +
       '<td>' + (x.bukti ? '<a href="' + esc(x.bukti) + '" target="_blank" rel="noopener">Lihat bukti</a>' : '') + '</td>' +
-      '<td>' + esc(x.status) + (x.seri ? '<br>' + esc(x.seri) : '') + '</td><td>';
+      '<td>' + esc(x.status) + (x.seri ? '<br>' + esc(x.seri) : '') + '</td>' +
+      '<td>' + (x.tautan ? '<a href="' + esc(x.tautan) + '" target="_blank" rel="noopener">Unduh paket</a>' : '-') + '</td><td>';
     if (x.status === 'Menunggu') {
       html += '<button class="hijau" data-baris="' + x.baris + '" data-aksi="Disetujui">Setujui</button> ' +
         '<button class="merah" data-baris="' + x.baris + '" data-aksi="Ditolak">Tolak</button> ';
     } else if (x.status === 'Disetujui') {
       html += '<button data-baris="' + x.baris + '" data-aksi="lisensi">Lihat Lisensi</button> ';
+      if (!x.tautan) {
+        html += '<button data-baris="' + x.baris + '" data-aksi="buatFolder">Buat Folder</button> ';
+      }
     }
     html += '<button class="merah" data-baris="' + x.baris + '" data-aksi="hapus">Hapus</button>';
     html += '</td></tr>';
@@ -102,7 +106,7 @@ function tampilDaftar(r){
     b.addEventListener('click', function(){
       var a = b.getAttribute('data-aksi');
       var bar = parseInt(b.getAttribute('data-baris'), 10);
-      if (a === 'lisensi') lihatLisensi(bar); else if (a === 'hapus') hapus(bar); else aksi(bar, a);
+      if (a === 'lisensi') lihatLisensi(bar); else if (a === 'hapus') hapus(bar); else if (a === 'buatFolder') buatFolder(bar); else aksi(bar, a);
     });
   });
 }
@@ -123,6 +127,12 @@ function hapus(baris){
   if (!confirm('Hapus baris ini? Data dan berkas bukti yang dihapus tidak bisa dikembalikan.')) return;
   jsonp({ action: 'hapus', pin: PIN, baris: baris }, function(r){
     tampilPesan('pesan', r.pesan, r.ok); if (r.ok) muat();
+  });
+}
+function buatFolder(baris){
+  if (!confirm('Buat folder unduhan paket untuk sekolah ini?')) return;
+  jsonp({ action: 'buatFolder', pin: PIN, baris: baris }, function(r){
+    tampilPesan('pesan', r.pesan + (r.tautan ? ' Tautan: ' + r.tautan : ''), r.ok); if (r.ok) muat();
   });
 }
 function lihatLisensi(baris){
