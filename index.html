@@ -254,8 +254,8 @@ function kirim() {
   if (!/^08\d{8,11}$/.test(data.wa)) { tampilPesan('Nomor WA belum benar: isi nomor Indonesia diawali 08, total 10–13 digit.', false); return; }
   var tombol = document.getElementById('kirim'); tombol.disabled = true; tombol.textContent = 'Mengirim…';
   var lanjut = function (gambar) {
-    var payload = { action: 'kirim', sekolah: data.sekolah, npsn: data.npsn, prov: data.prov,
-      kab: data.kab, kec: data.kec, email: data.email, wa: data.wa, os: data.os,
+    var payload = { action: 'kirim', sekolah: data.sekolah, npsn: data.npsn, provinsi: data.prov,
+      kabupaten: data.kab, kecamatan: data.kec, email: data.email, wa: data.wa, os: data.os,
       jumlah: data.jumlah, nominal: data.nominal, bukti: '' };
     if (gambar) { payload.buktiData = gambar.data; payload.buktiTipe = gambar.tipe; payload.buktiNama = gambar.nama; }
     fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) })
